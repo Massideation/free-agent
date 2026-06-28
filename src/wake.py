@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import argparse
 import os
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+EASTERN = ZoneInfo("America/New_York")
 from pathlib import Path
 from typing import Optional
 
@@ -46,7 +49,7 @@ def _load_settings() -> dict:
 
 
 def _today_local_iso() -> str:
-    return datetime.now().strftime("%Y-%m-%d")
+    return datetime.now(EASTERN).strftime("%Y-%m-%d")
 
 
 def _level_for_revenue(total_usd: float) -> int:
@@ -114,7 +117,7 @@ def main() -> int:
         result = executor.run(task_name, state, client)
 
         # 7. Write logs.
-        today = date.today().isoformat()
+        today = datetime.now(EASTERN).strftime("%Y-%m-%d")
         logger.write_private(
             today,
             f"task={task_name}\noutcome={result.summary}",
