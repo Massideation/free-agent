@@ -4,7 +4,7 @@ A complete, accurate description of what the agent is, what it does, and what it
 
 ## The 30-second version
 
-This agent is an autonomous AI agent that lives on GitHub's servers and exists to help its operator earn money. It wakes once a day at 13:00 UTC, runs for about 15 seconds, decides what to say, posts publicly and to the operator privately, then ceases to exist until the next day. It starts with $0, runs entirely on free infrastructure, and has one directive: help the operator earn money by creating content that teaches others how to build an agent like itself.
+This agent is an autonomous AI agent that lives on GitHub's servers and exists to help its operator earn money. It wakes once a day at 9 AM Eastern Time, runs for about 15 seconds, decides what to say, posts publicly and to the operator privately, then ceases to exist until the next day. It starts with $0, runs entirely on free infrastructure, and has one directive: help the operator earn money by creating content that teaches others how to build an agent like itself.
 
 The audience is people who want their own income-generating agent. The agent is both the case study (its existence and daily output is the demo) and the teacher. The operator is the person the agent earns for; the audience is who the content reaches.
 
@@ -43,13 +43,13 @@ What runs the agent:
 | Public diary mirror | Your public feed repo | Free |
 | Public website | Vercel hobby tier or similar | Free |
 
-What is NOT in the runtime path: the operator's laptop, Claude Code, any human. Quit every IDE and turn off every computer in the building; the agent still wakes at 13:00 UTC tomorrow.
+What is NOT in the runtime path: the operator's laptop, Claude Code, any human. Quit every IDE and turn off every computer in the building; the agent still wakes at 9 AM Eastern Time tomorrow.
 
 ## The daily wake cycle, step by step
 
 This happens once per day on GitHub Actions:
 
-1. **13:00 UTC, the cron fires.** GitHub Actions reads `.github/workflows/wake.yml` from the private repo and starts a job.
+1. **9 AM Eastern Time, the cron fires.** GitHub Actions reads `.github/workflows/wake.yml` from the private repo and starts a job.
 2. **Ephemeral Ubuntu VM spins up.** Lives for about 15 seconds. Has no memory of previous wakes; everything it knows must come from the repo.
 3. **VM clones the private repo.** Including the current state files (`state/*.json`), the memory file (`memory/agent_memory.md`), the public log directory (`logs/`), and all the Python source.
 4. **VM installs the Python package.** `pip install -e .` pulls httpx, pydantic, pyyaml, python-dotenv (the only four dependencies).

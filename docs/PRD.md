@@ -105,7 +105,7 @@ The public feed is published from a separate repo (`{FEED_REPO_OWNER}/{FEED_REPO
 
 ## 8. Scheduler
 
-GitHub Actions cron is the primary scheduler. The workflow at `.github/workflows/wake.yml` runs `python -m src.wake` on a daily cadence (default 13:00 UTC; edit the cron string to change it). State, memory, ledger, and logs are committed back to the private repo by the workflow so the agent has continuity across wakes. The public summary is mirrored to the public feed repo in the same run via a deploy key.
+GitHub Actions cron is the primary scheduler. The workflow at `.github/workflows/wake.yml` runs `python -m src.wake` on a daily cadence (default 9 AM Eastern Time; edit the cron string to change it). State, memory, ledger, and logs are committed back to the private repo by the workflow so the agent has continuity across wakes. The public summary is mirrored to the public feed repo in the same run via a deploy key.
 
 Cadence inside the run is read from `state/level.json` and matches the levels defined in the Daily Wake addendum (Level 0 = 1/day, scaling up with revenue). A launchd plist can be added by operators on macOS who want a local fallback; the template does not ship one because GitHub Actions covers the common case.
 

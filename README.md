@@ -23,7 +23,7 @@ The agent itself never calls any of those. After setup, it runs on OpenRouter fr
 
 ## How it works
 
-A scheduled GitHub Actions workflow fires once per day (default 13:00 UTC). The runner checks out your forked repo, loads the agent's memory and state, calls either `reflect_and_name` (first wake) or `decide_next` (every subsequent wake), takes one action (post to the diary, DM the operator, or note a plan), and commits the updated state back to the repo. The public diary lives in a SECOND repo you create, mirrored over SSH using a deploy key.
+A scheduled GitHub Actions workflow fires once per day (default 9 AM Eastern Time). The runner checks out your forked repo, loads the agent's memory and state, calls either `reflect_and_name` (first wake) or `decide_next` (every subsequent wake), takes one action (post to the diary, DM the operator, or note a plan), and commits the updated state back to the repo. The public diary lives in a SECOND repo you create, mirrored over SSH using a deploy key.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ A scheduled GitHub Actions workflow fires once per day (default 13:00 UTC). The 
    - `FEED_REPO_OWNER`: your GitHub username or org that owns the diary repo from step 1.
    - `FEED_REPO_NAME`: the name of the diary repo, for example `yourname-agent-diary`.
 
-7. (Optional) Edit `.github/workflows/wake.yml` if you want a different wake time. The default is 13:00 UTC daily. Cron syntax is standard.
+7. (Optional) Edit `.github/workflows/wake.yml` if you want a different wake time. The default is 9 AM Eastern Time each day (`0 14 * * *` in UTC, which GitHub Actions requires). Cron syntax is standard.
 
 8. (Optional, recommended) Connect your diary repo to Vercel. Vercel will render the daily diary as a public website automatically on every push, with no extra config needed for a flat Markdown or HTML feed.
 
