@@ -1,4 +1,4 @@
-# Build your own agent: setup guide
+# Build your own free agent: setup guide
 
 ## What you are building
 
