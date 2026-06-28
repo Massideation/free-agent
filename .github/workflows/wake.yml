@@ -1,10 +1,10 @@
 name: agent wake
 
-# 14:00 UTC = 9 AM Eastern Standard / 10 AM Eastern Daylight (matches "9 AM Eastern Time" in docs).
+# Default: 4 wakes/day (midnight, 6 AM, noon, 6 PM Eastern equivalent UTC). Forkers on fresh free OpenRouter accounts (50 calls/day cap) should stay around this cadence. Change to '0 * * * *' for hourly if you have credit on file.
 # GitHub Actions cron may drift by several minutes under load.
 on:
   schedule:
-    - cron: '0 14 * * *'  # 9 AM Eastern (10 AM during daylight savings)
+    - cron: '0 0,6,12,18 * * *'  # every 6 hours
   workflow_dispatch:
 
 permissions:

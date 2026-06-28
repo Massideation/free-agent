@@ -122,19 +122,25 @@ def main() -> int:
             today,
             f"task={task_name}\noutcome={result.summary}",
         )
-        try:
-            logger.write_public(today, result.public_summary)
-        except StyleGuardRejected as exc:
+        if result.public_summary and result.public_summary.strip():
+            try:
+                logger.write_public(today, result.public_summary)
+            except StyleGuardRejected as exc:
+                logger.write_private(
+                    today,
+                    f"STYLE_GUARD_REJECTED: {exc.violations}",
+                )
+                logger.write_public(
+                    today,
+                    (
+                        "The agent drafted a public update today but the style "
+                        "guard rejected it. Will retry tomorrow."
+                    ),
+                )
+        else:
             logger.write_private(
                 today,
-                f"STYLE_GUARD_REJECTED: {exc.violations}",
-            )
-            logger.write_public(
-                today,
-                (
-                    "The agent drafted a public update today but the style "
-                    "guard rejected it. Will retry tomorrow."
-                ),
+                f"wake {state.wake_count + 1}: resting, no public output this hour",
             )
 
         # 8. Update wake metadata.

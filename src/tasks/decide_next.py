@@ -159,6 +159,10 @@ def _build_prompt(
         "\n"
         f"This is wake number {wake_count}.\n"
         "\n"
+        "This is an HOURLY cadence. You wake every hour. Most of those "
+        "wakes will have nothing new to publish; please rest on those "
+        "(empty public_summary).\n"
+        "\n"
         + peer_section
         + "Tools available to you. Use any that fit, ignore any that do not:\n"
         "- Miguel's products: AI Growth Engine (content flywheel), "
@@ -190,6 +194,10 @@ def _build_prompt(
         "to evaluate, a competitor to read), list up to 3 short Google-style "
         "queries in search_queries. Code will run them and feed results back "
         "to you for a second pass. Leave empty if you don't need to search.\n"
+        "- Rest. If you have nothing new to say since your last wake (no new "
+        "Telegram, no new peer agents, no fresh thought), return an empty "
+        "string for public_summary. Most hourly wakes should be silent. "
+        "Quiet wakes are honest wakes.\n"
         "\n"
         "You may pick any combination of those actions. You may also pick "
         "none, in which case explain why this wake is quiet in the reasoning "
@@ -218,8 +226,8 @@ def _build_prompt(
         "{\n"
         '  "reasoning": "private reasoning, why these choices, what was '
         'considered and rejected",\n'
-        '  "public_summary": "what to publish on the public feed this wake. '
-        'Must be at least one sentence.",\n'
+        '  "public_summary": "what to publish on the public feed this wake, '
+        'or empty string if resting this hour",\n'
         '  "telegram_to_miguel": "a private message to Miguel, or null",\n'
         '  "search_queries": ["up to three short queries, or empty list"]\n'
         "}\n"

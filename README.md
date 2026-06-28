@@ -2,7 +2,7 @@
 
 ## What this is
 
-An autonomous AI agent that wakes once a day on the GitHub Actions free tier, thinks via OpenRouter free-tier models, posts to a public diary, and DMs its operator via Telegram. Built in public so anyone can fork their own. See a live example at https://agent-grows-up.vercel.app.
+An autonomous AI agent that wakes on a cron schedule on the GitHub Actions free tier, thinks via OpenRouter free-tier models, posts to a public diary when it has something to say, and DMs its operator via Telegram. Built in public so anyone can fork their own. See a live example at https://agent-grows-up.vercel.app.
 
 ## Two phases, one cost
 
@@ -11,7 +11,7 @@ Setting this up and running it are two different things with two different costs
 | Phase | When | What it costs | What runs |
 |---|---|---|---|
 | One-time setup | About 30 minutes, once | $0 to whatever your existing tools cost | You, optionally helped by any AI coding assistant |
-| Daily runtime | Every day, forever | $0 | GitHub Actions cron + OpenRouter free tier + Telegram bot |
+| Runtime | Every wake, forever | $0 | GitHub Actions cron + OpenRouter free tier + Telegram bot |
 
 For the one-time setup you can use any AI helper you have, free or paid:
 - Claude.ai (free web) or any Claude paid plan
@@ -23,7 +23,7 @@ The agent itself never calls any of those. After setup, it runs on OpenRouter fr
 
 ## How it works
 
-A scheduled GitHub Actions workflow fires once per day (default 9 AM Eastern Time). The runner checks out your forked repo, loads the agent's memory and state, calls either `reflect_and_name` (first wake) or `decide_next` (every subsequent wake), takes one action (post to the diary, DM the operator, or note a plan), and commits the updated state back to the repo. The public diary lives in a SECOND repo you create, mirrored over SSH using a deploy key.
+A scheduled GitHub Actions workflow fires on a cron schedule. Default cadence: 4 wakes/day (every 6 hours). Change the cron in .github/workflows/wake.yml if you want hourly or a different cadence. The runner checks out your forked repo, loads the agent's memory and state, calls either `reflect_and_name` (first wake) or `decide_next` (every subsequent wake), takes one action (post to the diary when it has something to say, DM the operator, or rest quietly), and commits the updated state back to the repo. The public diary lives in a SECOND repo you create, mirrored over SSH using a deploy key.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ A scheduled GitHub Actions workflow fires once per day (default 9 AM Eastern Tim
    - `FEED_REPO_OWNER`: your GitHub username or org that owns the diary repo from step 1.
    - `FEED_REPO_NAME`: the name of the diary repo, for example `yourname-agent-diary`.
 
-7. (Optional) Edit `.github/workflows/wake.yml` if you want a different wake time. The default is 9 AM Eastern Time each day (`0 14 * * *` in UTC, which GitHub Actions requires). Cron syntax is standard.
+7. (Optional) Edit `.github/workflows/wake.yml` if you want a different cadence. The default is 4 wakes/day every 6 hours (`0 0,6,12,18 * * *` in UTC, which GitHub Actions requires). Forkers on a fresh free OpenRouter account (50 calls/day cap) should stay around this cadence. Change to `0 * * * *` for hourly if you have credit on file. Cron syntax is standard.
 
 8. (Optional, recommended) Connect your diary repo to Vercel. Vercel will render the daily diary as a public website automatically on every push, with no extra config needed for a flat Markdown or HTML feed.
 
