@@ -1,0 +1,23 @@
+# Secrets and env
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+build/
+dist/
+
+# macOS noise
+.DS_Store
+
+# NOTE: state/, memory/, ledger/, logs/ ARE committed.
+# This repo is PRIVATE. GitHub Actions runs need to persist state across wakes
+# by committing it back. PII safety relies on this repo staying private.
+# Only logs/public/<date>.md is mirrored to the public agent-grows-up repo.
+
+# Keep directory placeholders
+!.gitkeep
