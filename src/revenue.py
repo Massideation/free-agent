@@ -1,7 +1,7 @@
 """Pending vs confirmed revenue ledger for agent-001.
 
 Per PRD section 13 and INTERFACES.md, revenue confirmation is manual.
-The agent appends pending events; Miguel confirms or rejects via CLI.
+The agent appends pending events; the operator confirms or rejects via CLI.
 Only confirmed events count toward level progression.
 """
 
