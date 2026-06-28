@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import yaml
 from pydantic import BaseModel, Field
 
 
@@ -20,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 STATE_DIR = REPO_ROOT / "state"
 MEMORY_DIR = REPO_ROOT / "memory"
 MEMORY_FILE = MEMORY_DIR / "agent_memory.md"
+SETTINGS_FILE = REPO_ROOT / "config" / "settings.yaml"
 
 QUOTA_FILE = STATE_DIR / "quota.json"
 LEVEL_FILE = STATE_DIR / "level.json"
@@ -182,6 +184,30 @@ def read_memory() -> str:
         return ""
     with MEMORY_FILE.open("r", encoding="utf-8") as f:
         return f.read()
+
+
+def load_operator_context() -> dict:
+    """Return operator identity for prompts and disclosures.
+
+    Returns {"name": str, "products": list[dict]}. The name comes from the
+    OPERATOR_NAME environment variable (default "your operator"). The products
+    come from config/settings.yaml under operator.products, where each item is
+    a {name, description} mapping. Any read or parse failure yields [].
+    """
+    name = os.environ.get("OPERATOR_NAME", "your operator")
+
+    products: list[dict] = []
+    try:
+        with SETTINGS_FILE.open("r", encoding="utf-8") as f:
+            settings = yaml.safe_load(f) or {}
+        operator = settings.get("operator") or {}
+        raw_products = operator.get("products") or []
+        if isinstance(raw_products, list):
+            products = [p for p in raw_products if isinstance(p, dict)]
+    except Exception:
+        products = []
+
+    return {"name": name, "products": products}
 
 
 def load_addendum_context() -> dict:

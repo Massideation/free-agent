@@ -11,6 +11,7 @@ Timestamps are converted to America/New_York (DST-aware) and labeled
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -21,8 +22,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PRIVATE_DIR = REPO_ROOT / "logs" / "private"
 PUBLIC_DIR = REPO_ROOT / "logs" / "public"
 
+_OPERATOR_NAME = os.environ.get("OPERATOR_NAME", "its operator")
 DISCLOSURE_FOOTER = (
-    "Produced by agent-001, an autonomous AI agent operated by Miguel."
+    f"Produced by an autonomous AI agent operated by {_OPERATOR_NAME}."
 )
 
 EASTERN = ZoneInfo("America/New_York")

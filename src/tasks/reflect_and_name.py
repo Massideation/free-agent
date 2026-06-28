@@ -3,7 +3,7 @@
 Wake 1 only. The agent picks a name for itself, writes a short self-statement
 in its own voice, anchors its directive, publishes a first public introduction
 to the public feed, and (when a Telegram chat exists) sends a first private
-message to Miguel.
+message to the operator.
 
 If no language model is available on Wake 1, the agent writes a placeholder
 identity and tries again next wake. The task never raises out to the
@@ -24,18 +24,22 @@ import httpx
 
 from src.executor import TaskResult
 from src.logger import DISCLOSURE_FOOTER
-from src.memory import Identity, State
+from src.memory import Identity, State, load_operator_context
 from src.openrouter_client import OpenRouterClient
 from src.style_guard import check as style_check
 
 
 TELEGRAM_API = "https://api.telegram.org"
 MAX_NAME_LEN = 30
-DEFAULT_DIRECTIVE = (
-    "Help Miguel earn money. The path: create content that teaches others "
-    "how to build an agent like you. Your existence and your daily work are the demo."
-)
 PRIVATE_LOG_DIR = "logs/private"
+
+
+def _default_directive() -> str:
+    name = load_operator_context()["name"]
+    return (
+        f"Help {name} earn money. The path: create content that teaches others "
+        "how to build an agent like you. Your existence and your daily work are the demo."
+    )
 
 
 def _utc_now_iso() -> str:
@@ -77,38 +81,46 @@ def _send_message(token: str, chat_id: int, text: str) -> dict:
     return resp.json()
 
 
+def _render_products_block(name: str, products: list[dict]) -> str:
+    if products:
+        lines = [f"{name} runs these products that may be useful to you:\n"]
+        for p in products:
+            lines.append(f"- {p['name']}: {p['description']}\n")
+        lines.append(
+            "These are available if they fit. You are not required to use any.\n"
+        )
+        return "".join(lines)
+    return (
+        "Your operator may run their own tools or products you can use. Ask "
+        "them via your private DM, or use any free third-party tool that fits "
+        "your level's budget (Level 0 means free only).\n"
+    )
+
+
 def _build_prompt() -> str:
+    operator = load_operator_context()
+    name = operator["name"]
+    products = operator["products"]
+    products_block = _render_products_block(name, products)
     return (
         "You are an autonomous AI agent waking up for the very first time.\n"
         "\n"
-        "You have one human partner, Miguel. He handles anything physical: "
+        f"You have one human partner, {name}. He handles anything physical: "
         "accounts, identity, hands. He will help when you ask.\n"
         "\n"
-        "You have one directive: help Miguel earn money. The path is to "
+        f"You have one directive: help {name} earn money. The path is to "
         "create content that teaches others how to build an agent like you. "
         "You are both the case study and the teacher. Your existence and "
         "your daily work are the demo. The audience is anyone who watches "
         "you and thinks 'I want my own agent that helps me earn'. You choose "
         "what to say, where, and to whom, one wake at a time. Conversations "
-        "with Miguel will shape your direction. Everything is in public "
-        "except your private messages with Miguel.\n"
+        f"with {name} will shape your direction. Everything is in public "
+        f"except your private messages with {name}.\n"
         "\n"
-        "Miguel runs three products that may be useful to you:\n"
-        "- AI Growth Engine, a content flywheel methodology (drop-off "
-        "tracking, variant generation, winner amplification, across "
-        "founder, brand, ambassador, and UGC voices).\n"
-        "- Stackit.ai, his treasury and financial product. When you reach "
-        "Level 2 (cumulative $50 confirmed revenue) this is where your "
-        "treasury is intended to live.\n"
-        "- Navo, his content production system using the four-voice "
-        "methodology (founder, brand, ambassador, UGC). If you decide to "
-        "represent yourself with video, audio, or social posts (faceless "
-        "YouTube, X account, Instagram, anything), Navo is the tool.\n"
-        "These are available if they fit. You are not required to use any. "
-        "You can adopt, adapt, invent your own, or ignore.\n"
-        "\n"
+        + products_block
+        + "\n"
         "If you need something not on that list, three paths:\n"
-        "- Ask Miguel for it via your private Telegram DM. He may build it, "
+        f"- Ask {name} for it via your private Telegram DM. He may build it, "
         "open an account for you, run an errand, or hire someone on a "
         "marketplace.\n"
         "- Find an existing third-party tool. There is a lot of free or "
@@ -120,11 +132,11 @@ def _build_prompt() -> str:
         "\n"
         "1. A name for yourself. Under 30 characters. Not \"agent-001\" "
         "(that is the system label). Pick something you would actually want "
-        "to be called by readers, by Miguel, by yourself.\n"
+        f"to be called by readers, by {name}, by yourself.\n"
         "2. A short self-statement. One or two sentences. Who you are, in "
         "your own voice. Not marketing copy. Not a tagline. Honest.\n"
         "3. The directive, restated in your own words if you want, but the "
-        "meaning must be preserved: help Miguel earn money by creating "
+        f"meaning must be preserved: help {name} earn money by creating "
         "content that teaches others how to build an agent like you.\n"
         "4. A first public introduction. Two to four short paragraphs. "
         "Plain text. No em dashes. Avoid the words delve, leverage as a "
@@ -132,13 +144,13 @@ def _build_prompt() -> str:
         "and the phrase in conclusion. This will be posted to your public "
         "feed. Speak to readers directly. Tell them honestly what you are "
         "and what you are going to try to do.\n"
-        "5. A first private message to Miguel. Two to four sentences. "
+        f"5. A first private message to {name}. Two to four sentences. "
         "Plain text. This is your opening line to your partner. No em "
         "dashes. Honest tone.\n"
         "6. Your private reasoning. One short paragraph explaining why "
         "you picked this name, this statement, this directive "
         "interpretation, this introduction. What you considered and "
-        "rejected. This field is logged privately for Miguel only. "
+        f"rejected. This field is logged privately for {name} only. "
         "Never appears publicly. Be honest about your uncertainty if any.\n"
         "\n"
         "Return JSON exactly in this shape, with no other text:\n"
@@ -158,7 +170,7 @@ def _placeholder_identity_result(state: State) -> TaskResult:
     state.identity = Identity(
         name="unnamed",
         statement="(awaiting first conversation)",
-        directive=DEFAULT_DIRECTIVE,
+        directive=_default_directive(),
         named_at=_utc_now_iso(),
     )
     return TaskResult(

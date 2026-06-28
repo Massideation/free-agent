@@ -4,7 +4,7 @@ Runs on every wake after Wake 1. The agent reads its own identity, recent
 public log entries, and recent private log excerpts (the Telegram lines that
 respond_to_telegram persisted). It then asks the model for one JSON object
 containing reasoning (private), a public_summary, an optional private
-Telegram message to Miguel, and up to three optional web search queries.
+Telegram message to the operator, and up to three optional web search queries.
 
 If the model returned search_queries and the daily call quota still permits
 another model call, the task runs the searches via src.web_search, formats
@@ -31,7 +31,7 @@ import httpx
 from src import inbox
 from src.executor import TaskResult
 from src.logger import DISCLOSURE_FOOTER
-from src.memory import State
+from src.memory import State, load_operator_context
 from src.openrouter_client import OpenRouterClient
 from src.peers import get_peer_summary
 from src.style_guard import check as style_check
@@ -46,6 +46,22 @@ PRIVATE_LOG_DIR = REPO_ROOT / "logs" / "private"
 RECENT_FILE_COUNT = 3
 PUBLIC_TAIL_CHARS = 500
 PRIVATE_TAIL_CHARS = 1200
+
+
+def _render_products_tool_line(name: str, products: list[dict]) -> str:
+    """One bullet describing the operator's products for the tools section.
+
+    Non-empty products list yields a "{name}'s products:" line listing each.
+    Empty list yields the generic "your operator may have tools" fallback.
+    """
+    if products:
+        items = "; ".join(f"{p['name']}: {p['description']}" for p in products)
+        return f"- {name}'s products: {items}\n"
+    return (
+        "- Your operator may have their own tools or products you can use. "
+        "Ask them via private DM, or use any free third-party tool that fits "
+        "your level's budget (Level 0 means free only).\n"
+    )
 
 
 def _send_message(token: str, chat_id: int, text: str) -> dict:
@@ -189,12 +205,15 @@ def _build_prompt(
         if inbox_block
         else ""
     )
+    operator = load_operator_context()
+    operator_name = operator["name"]
+    products_line = _render_products_tool_line(operator_name, operator["products"])
     return (
         f"You are {name}. Your self-statement is: {statement}\n"
         "\n"
         f"Your directive is: {directive}\n"
         "\n"
-        "You wake up once per cycle. You have one human partner, Miguel, who "
+        f"You wake up once per cycle. You have one human partner, {operator_name}, who "
         "handles anything physical when you ask. Everything else is yours to "
         "decide.\n"
         "\n"
@@ -206,30 +225,25 @@ def _build_prompt(
         "\n"
         + peer_section
         + "Tools available to you. Use any that fit, ignore any that do not:\n"
-        "- Miguel's products: AI Growth Engine (content flywheel), "
-        "Stackit.ai (treasury, available to you at Level 2+), Navo "
-        "(content production with founder/brand/ambassador/UGC voices, "
-        "useful if you want to make video, audio, or social content to "
-        "represent yourself, including faceless YouTube channels or "
-        "social accounts).\n"
-        "- Things you can ask Miguel for via private DM: open new "
+        + products_line
+        + f"- Things you can ask {operator_name} for via private DM: open new "
         "accounts, build new tools, run errands, hire someone on a "
         "marketplace, anything physical or KYC-bound.\n"
         "- Existing third-party tools in the wild. Anything that fits "
         "your level's budget (Level 0 means free only) is fair game. "
-        "You can name what you want and ask Miguel to wire it.\n"
+        f"You can name what you want and ask {operator_name} to wire it.\n"
         "\n"
         "Recent public log entries (most recent first):\n"
         f"{recent_public_block}\n"
         "\n"
-        "Recent private messages between you and Miguel (most recent first):\n"
+        f"Recent private messages between you and {operator_name} (most recent first):\n"
         f"{recent_telegram_block}\n"
         f"{inbox_section}"
         "\n"
         "Your task right now: decide what to say this wake. You can do any of:\n"
         "\n"
         "- Post a public update on your feed. Keep it honest. No marketing copy.\n"
-        "- Reply privately to Miguel about something on your mind, or about a "
+        f"- Reply privately to {operator_name} about something on your mind, or about a "
         "decision you want his help on.\n"
         "- Ask for a web search. If you want to look something up before "
         "deciding what to publish this wake (a fact, a piece of news, a tool "
@@ -254,9 +268,9 @@ def _build_prompt(
         "- No em dashes.\n"
         "- Avoid the words delve, leverage as a verb, navigate as a verb, "
         "robust, ensure, furthermore, moreover, and the phrase in conclusion.\n"
-        "- Do not invent facts about yourself, Miguel, your revenue, your "
+        f"- Do not invent facts about yourself, {operator_name}, your revenue, your "
         "audience.\n"
-        "- Do not impersonate Miguel.\n"
+        f"- Do not impersonate {operator_name}.\n"
         "- Plain text only. No Markdown headings.\n"
         "- Be direct. Short paragraphs.\n"
         "\n"
@@ -275,9 +289,18 @@ def _build_prompt(
         'considered and rejected",\n'
         '  "public_summary": "what to publish on the public feed this wake, '
         'or empty string if resting this hour",\n'
-        '  "telegram_to_miguel": "a private message to Miguel, or null",\n'
-        '  "search_queries": ["up to three short queries, or empty list"]\n'
+        '  "telegram_to_miguel": "a private message to '
+        + operator_name
+        + ', or null",\n'
+        '  "search_queries": ["up to three short queries, or empty list"],\n'
+        '  "inbox_reply": {"message_id": "<one of the ids above>", "text": '
+        '"your reply to the operator"}\n'
         "}\n"
+        "\n"
+        "inbox_reply is optional. If you want to reply to a pending inbox "
+        "message, return an object with message_id matching one of the ids "
+        "listed in the operator inbox section, plus your text. Otherwise omit "
+        "it or set it to null. Only one inbox reply per wake.\n"
     )
 
 
@@ -412,6 +435,7 @@ def _build_search_followup_prompt(
     telegram_repr = (
         repr(preliminary_telegram) if preliminary_telegram is not None else "null"
     )
+    operator_name = load_operator_context()["name"]
     return (
         f"You are {name}. Your self-statement is: {statement}\n"
         "\n"
@@ -422,7 +446,7 @@ def _build_search_followup_prompt(
         "Recent public log entries (most recent first):\n"
         f"{recent_public_block}\n"
         "\n"
-        "Recent private messages between you and Miguel (most recent first):\n"
+        f"Recent private messages between you and {operator_name} (most recent first):\n"
         f"{recent_telegram_block}\n"
         "\n"
         "A moment ago, you produced a preliminary draft of this wake. You "
@@ -455,7 +479,7 @@ def _build_search_followup_prompt(
         "robust, ensure, furthermore, moreover, and the phrase in conclusion.\n"
         "- Do not invent facts. If a search result is unclear, say so "
         "honestly rather than guessing.\n"
-        "- Do not impersonate Miguel.\n"
+        f"- Do not impersonate {operator_name}.\n"
         "- Plain text only. No Markdown headings.\n"
         "- Be direct. Short paragraphs.\n"
         "- The reasoning field stays private. Be candid.\n"
@@ -467,7 +491,9 @@ def _build_search_followup_prompt(
         'your draft, what you kept, what you discarded",\n'
         '  "public_summary": "final public summary for this wake. Must be '
         'at least one sentence.",\n'
-        '  "telegram_to_miguel": "final private message to Miguel, or null"\n'
+        '  "telegram_to_miguel": "final private message to '
+        + operator_name
+        + ', or null"\n'
         "}\n"
     )
 
@@ -527,6 +553,13 @@ def run(state: State, client: Optional[OpenRouterClient]) -> TaskResult:
         peer_block = ""
         context_notes.append(f"peer summary errored: {exc}")
 
+    try:
+        inbox_block, pending_inbox = _build_inbox_block(context_notes)
+    except Exception as exc:
+        inbox_block = ""
+        pending_inbox = []
+        context_notes.append(f"inbox block errored: {exc}")
+
     prompt = _build_prompt(
         name=name,
         statement=statement,
@@ -535,6 +568,7 @@ def run(state: State, client: Optional[OpenRouterClient]) -> TaskResult:
         recent_public_block=recent_public_block,
         recent_telegram_block=recent_telegram_block,
         peer_block=peer_block,
+        inbox_block=inbox_block,
     )
 
     try:
@@ -806,6 +840,52 @@ def run(state: State, client: Optional[OpenRouterClient]) -> TaskResult:
     else:
         telegram_status = "skipped: token or chat_id missing"
 
+    # Inbox dispatch. Prefer call 2 inbox_reply, fall back to call 1.
+    inbox_reply_raw = None
+    if used_call_2 and parsed_2 is not None:
+        inbox_reply_raw = parsed_2.get("inbox_reply")
+    if inbox_reply_raw is None:
+        inbox_reply_raw = parsed.get("inbox_reply")
+
+    inbox_status: str
+    try:
+        if isinstance(inbox_reply_raw, dict):
+            mid = str(inbox_reply_raw.get("message_id") or "").strip()
+            txt = str(inbox_reply_raw.get("text") or "").strip()
+            if mid and txt:
+                known_ids = {m["id"] for m in pending_inbox}
+                if mid not in known_ids:
+                    inbox_status = f"skipped: unknown message_id {mid!r}"
+                else:
+                    tx_violations = style_check(txt)
+                    if tx_violations:
+                        violation_log.append(
+                            "inbox_reply style violations: "
+                            + ", ".join(tx_violations)
+                        )
+                        inbox_status = (
+                            "skipped: style violations: "
+                            + ", ".join(tx_violations)
+                        )
+                    else:
+                        try:
+                            inbox.write_reply(mid, txt)
+                            inbox.mark_processed(mid)
+                            inbox_status = f"replied to {mid}"
+                        except Exception as exc:
+                            inbox_status = f"errored: {exc}"
+            else:
+                inbox_status = "skipped: missing message_id or text"
+        elif inbox_reply_raw is None:
+            inbox_status = "skipped: nothing to reply"
+        else:
+            inbox_status = (
+                "skipped: inbox_reply had unexpected type: "
+                f"{type(inbox_reply_raw).__name__}"
+            )
+    except Exception as exc:
+        inbox_status = f"errored: {exc}"
+
     # Build the private summary. Public output never sees this block.
     model_calls_used = 2 if second_call_used else 1
     if second_call_used and used_call_2:
@@ -896,6 +976,8 @@ def run(state: State, client: Optional[OpenRouterClient]) -> TaskResult:
     summary_parts.append("")
     summary_parts.append("## Dispatch")
     summary_parts.append(f"telegram_status: {telegram_status}")
+    summary_parts.append(f"inbox_status: {inbox_status}")
+    summary_parts.append(f"inbox_pending_count: {len(pending_inbox)}")
     summary_parts.append(
         f"final_source: {'call_2' if used_call_2 else 'call_1'}"
     )
