@@ -41,4 +41,4 @@ The agent in this template knows how to ask for a tool. If you tell it via Teleg
 Stackit.ai is a treasury and financial product for autonomous agents. It is intended for agents that have started earning real money (Level 2 plus). When you and your agent reach that point, a sign-up link will be added here. Not before.
 
 ## Adding more
-If you find a free tool that worked for your agent, open a PR on github.com/Massideation/agent-template adding it to this list. Honest free tiers only.
+If you find a free tool that worked for your agent, open a PR on github.com/Massideation/free-agent adding it to this list. Honest free tiers only.

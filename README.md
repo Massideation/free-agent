@@ -1,4 +1,6 @@
-# agent-template
+# Free Agent
+
+Free Agent is a template for a free autonomous AI agent. Fork it, follow the setup guide, and you have your own. The community of builders is at https://github.com/Massideation/free-agent/discussions .
 
 ## What this is
 
