@@ -1,10 +1,12 @@
 name: agent wake
 
-# Default: 4 wakes/day (midnight, 6 AM, noon, 6 PM Eastern equivalent UTC). Forkers on fresh free OpenRouter accounts (50 calls/day cap) should stay around this cadence. Change to '0 * * * *' for hourly if you have credit on file.
-# GitHub Actions cron may drift by several minutes under load.
+# Default: 4 wakes/day. Times are in UTC because GitHub Actions cron is UTC.
+# 0,6,12,18 UTC keeps a fresh free OpenRouter account (about 50 calls/day)
+# comfortably under quota. Change to '0 * * * *' for hourly if you have credit
+# on file. GitHub Actions cron may drift by several minutes under load.
 on:
   schedule:
-    - cron: '0 0,6,12,18 * * *'  # every 6 hours
+    - cron: '0 0,6,12,18 * * *'
   workflow_dispatch:
 
 permissions:
@@ -36,7 +38,6 @@ jobs:
       - name: Run one wake
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          FEED_ISSUE_TOKEN: ${{ secrets.FEED_ISSUE_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
           FEED_REPO_OWNER: ${{ vars.FEED_REPO_OWNER }}
@@ -51,29 +52,31 @@ jobs:
           if git diff --cached --quiet; then
             echo "No state changes to commit."
           else
-            git commit -m "wake: $(date -u +%F)"
+            git commit -m "wake: $(TZ='America/New_York' date +%F)"
             git push
           fi
 
-      - name: Mirror today's public log to public feed repo
+      - name: Mirror today's public log to the public diary repo
         if: always()
+        env:
+          FEED_GITHUB_TOKEN: ${{ secrets.FEED_GITHUB_TOKEN }}
+          FEED_REPO_OWNER: ${{ vars.FEED_REPO_OWNER }}
+          FEED_REPO_NAME: ${{ vars.FEED_REPO_NAME }}
         run: |
-          TODAY=$(date -u +%F)
+          TODAY=$(TZ='America/New_York' date +%F)
           PUBLIC_LOG="logs/public/${TODAY}.md"
 
           if [ ! -f "$PUBLIC_LOG" ]; then
-            echo "No public log produced today (${TODAY}). Skipping mirror."
+            echo "No public log produced today (${TODAY}). Nothing to mirror."
             exit 0
           fi
 
-          mkdir -p ~/.ssh
-          echo "${{ secrets.FEED_DEPLOY_KEY }}" > ~/.ssh/feed_key
-          chmod 600 ~/.ssh/feed_key
-          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -z "${FEED_GITHUB_TOKEN}" ] || [ -z "${FEED_REPO_OWNER}" ] || [ -z "${FEED_REPO_NAME}" ]; then
+            echo "Public diary mirror is not configured (needs FEED_GITHUB_TOKEN secret and FEED_REPO_OWNER / FEED_REPO_NAME variables). Skipping."
+            exit 0
+          fi
 
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/feed_key -o IdentitiesOnly=yes -o UserKnownHostsFile=~/.ssh/known_hosts"
-
-          git clone git@github.com:${{ vars.FEED_REPO_OWNER }}/${{ vars.FEED_REPO_NAME }}.git /tmp/feed
+          git clone "https://x-access-token:${FEED_GITHUB_TOKEN}@github.com/${FEED_REPO_OWNER}/${FEED_REPO_NAME}.git" /tmp/feed
           mkdir -p /tmp/feed/logs/public
           cp "$PUBLIC_LOG" "/tmp/feed/logs/public/${TODAY}.md"
 
@@ -87,5 +90,3 @@ jobs:
             git commit -m "wake: ${TODAY}"
             git push origin main
           fi
-
-          rm -f ~/.ssh/feed_key
