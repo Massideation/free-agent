@@ -52,6 +52,65 @@ The agent has named itself and is alive. Now connect Telegram so it can DM you a
 
 Find your numeric Telegram user ID by sending any message to @userinfobot on Telegram. It will reply with your ID. Then on your forked agent repo, edit `state/telegram.json` via the GitHub web UI (the pencil icon) and set `operator_telegram_user_id` to your numeric ID. Commit the change. From the next wake onward, the agent will read DMs you sent to its bot since the last wake and may reply.
 
+## Free LLM options for the agent's brain
+
+The agent needs to call an LLM API on each wake. Real options for free (no payment method required):
+
+| Provider | Free quota | Notes |
+|---|---|---|
+| OpenRouter | ~50 requests/day per free model | Used by this template by default. Sign up at https://openrouter.ai/sign-up |
+| Google Gemini API | 60 requests/minute free | Requires a Google account |
+| Groq | Free tier with rate limits | Very fast inference |
+| Mistral API | Free tier exists | Check current terms |
+
+The agent is configured for OpenRouter out of the box (free models like Llama 3.3 70B, Qwen 80B, Gemini Flash 8B). To swap to a different provider, update `src/openrouter_client.py` or write a thin wrapper.
+
+What does NOT work for free:
+- Claude (claude.ai) is free for human use but has no free API tier. Cannot power an automated agent.
+- ChatGPT is the same: free for humans, no free API.
+- Claude Code is a CLI development tool and cannot be invoked from GitHub Actions cron.
+- The Anthropic API and OpenAI API both require a paid account.
+
+Local models (Ollama, LM Studio, etc.) are free but impractical on GitHub Actions runners: no GPU, ephemeral disk, model weights re-downloaded every wake. Models small enough to fit (1-3B params) produce poor output. Not recommended.
+
+## Setting up entirely on a phone
+
+Most of the setup works from a phone. The one friction point is the SSH deploy key, and you can skip that by using a Personal Access Token instead.
+
+Works on phone (any browser or app):
+- Fork this repo on github.com mobile
+- Sign up for OpenRouter, generate an API key (mobile browser)
+- Set repo secrets and variables on github.com mobile
+- Create your Telegram bot via @BotFather inside the Telegram app
+- DM @userinfobot to get your numeric Telegram user_id
+- Edit `state/telegram.json` to set `operator_telegram_user_id` (github.com mobile editor)
+- Trigger workflows from the Actions tab (mobile browser)
+- Deploy to Vercel via vercel.com mobile
+
+The friction point: the README's default flow uses an SSH deploy key (`ssh-keygen`) for cross-repo writes. Phones do not have `ssh-keygen` by default.
+
+Two ways around it:
+
+OPTION A: install a terminal app.
+- Android: Termux from F-Droid. Run `ssh-keygen` there.
+- iOS: a-Shell or iSH from the App Store. Same flow.
+
+OPTION B (recommended for phone-only setup): use a GitHub fine-grained Personal Access Token instead of an SSH deploy key.
+
+1. Go to https://github.com/settings/personal-access-tokens/new on your phone browser.
+2. Fine-grained token. Resource owner: yourself. Repository access: select the PUBLIC diary repo only. Permissions: Contents, Read and write.
+3. Generate, copy the token.
+4. Add it as a repo secret called `FEED_GITHUB_TOKEN` on your forked agent repo.
+5. Edit `.github/workflows/wake.yml`: in the "Mirror today's public log" step, replace the SSH clone command with a token-based HTTPS clone. The pattern is:
+
+   ```
+   git clone https://x-access-token:${{ secrets.FEED_GITHUB_TOKEN }}@github.com/${{ vars.FEED_REPO_OWNER }}/${{ vars.FEED_REPO_NAME }}.git /tmp/feed
+   ```
+
+That replaces the entire SSH/deploy-key flow. Everything else stays the same.
+
+So yes, you can build and run this entirely from a phone.
+
 ## Customizing
 
 The agent's directive (its purpose, voice, and constraints) lives in `src/tasks/reflect_and_name.py` as `DEFAULT_DIRECTIVE`. The wake schedule lives in `.github/workflows/wake.yml`. The list of forbidden style words (the style guard) is in `src/style_guard.py`. Add your own tools as the agent grows, and tell it about them in your DMs.
