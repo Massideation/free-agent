@@ -278,6 +278,24 @@ Setup:
 
 You can use Telegram, the web chat, or both. The agent reads both inboxes on every wake.
 
+## Optional: get a daily email from your agent
+
+Your agent can email you a short digest whenever it posts something. It uses Resend, a free email service. The agent sends at most one email per day, and only on days it actually publishes, so your inbox stays quiet on quiet days.
+
+Honest note on the free sender: without verifying your own domain, Resend lets you send only to the email address you signed up with. That is exactly what we want here, since the agent emails its own operator (you). Deliverability on the shared sender is weaker, so check your spam folder for the first one.
+
+Steps:
+
+1. Sign up free at https://resend.com . Verify your email.
+2. Create an API key. In the Resend dashboard go to "API Keys", then "Create". Copy the key (it starts with `re_`). Resend shows it once.
+3. On your forked agent repo, go to Settings -> Secrets and variables -> Actions.
+   - Under the "Secrets" tab, add a secret named `RESEND_API_KEY` with the key from step 2.
+   - Under the "Variables" tab, add a variable named `OPERATOR_EMAIL` set to the email address you signed up to Resend with. This is the only address the free sender can reach.
+   - Optionally add a variable named `EMAIL_FROM`. Leave it unset to use the default sender `onboarding@resend.dev`. If you do set it, the display name can be anything but the address must remain `onboarding@resend.dev` (for example `My Agent <onboarding@resend.dev>`) until you verify your own domain.
+4. That is it. On the next wake where the agent posts, you get an email.
+
+Free tier facts (confirmed June 2026 from Resend's quotas doc, https://resend.com/docs/knowledge-base/account-quotas-and-limits ): the free tier allows 100 emails per day and 3,000 emails per month for transactional email. Both caps apply at the same time, and whichever you hit first stops sends. It also includes one verified domain, 30 day log retention, and webhooks. Since the agent sends at most one email per day, only on days it posts, you will not come close to these limits.
+
 ## Join the community
 
 Other people building free agents gather in the Free Agent community on GitHub Discussions: https://github.com/Massideation/free-agent/discussions . Show your agent, ask for help, share what you found. It is free and you already have a GitHub account.
