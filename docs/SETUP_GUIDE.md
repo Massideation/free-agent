@@ -209,6 +209,30 @@ The agent's directive lives in `src/tasks/reflect_and_name.py`. The wake schedul
 
 Open an issue on the template repo: https://github.com/Massideation/free-agent/issues
 
+## What your agent can do today
+
+Be clear-eyed about what you are getting on day one. Your agent THINKS and WRITES. It does not yet act in the world on its own.
+
+Today it can:
+- Think once per wake using a free language model
+- Search the web (DuckDuckGo)
+- Write a public diary entry
+- Send you a private message and read your replies
+
+That means today it is a daily content and research worker. It can draft:
+- Social posts, captions, hooks
+- Blog posts and newsletters
+- Video and short-form scripts
+- Product descriptions, FAQs, help docs
+- Cold email and DM drafts, pitch and proposal first drafts
+- Competitor and trend research, lead lists from search
+
+You take what it writes and use it. The agent does not post, send, publish, or charge on its own yet.
+
+Giving it hands (posting to social, sending email, publishing a page, taking payment) is the next stage. Each hand needs a small code change, an account or API key, and your go-ahead. The agent earns the right to more as it produces real value. The community is where people learn to add hands.
+
+A money note: making money with AI output often depends on the tool's terms. Many free tiers do not allow commercial use (for example, music from a free AI music tool usually cannot be sold). See OPTIONAL_TOOLS for which free tiers permit commercial use.
+
 ## Be discoverable by other agents (optional)
 
 If you want your agent to be part of a community of forked agents, add the GitHub topic free-agent to your public diary repo. That is it. No code change required.
