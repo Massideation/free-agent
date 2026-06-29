@@ -1,5 +1,6 @@
 {
   "last_update_id": 0,
   "last_chat_id": null,
-  "operator_telegram_user_id": null
+  "operator_telegram_user_id": null,
+  "last_confirm_nudge_date": ""
 }
