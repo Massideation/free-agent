@@ -1,4 +1,4 @@
-"""Wake cycle orchestrator for agent-001.
+"""Wake cycle orchestrator for the agent.
 
 One process invocation runs one wake per PRD section 9 and INTERFACES.md.
 See also docs/PRD_ADDENDUM_daily_wake.md for level thresholds.
@@ -19,6 +19,7 @@ import yaml
 from dotenv import load_dotenv
 
 from src import executor, logger, memory, planner, revenue
+from src.emailer import send_operator_email
 from src.logger import StyleGuardRejected
 from src.memory import LastWake, State
 from src.openrouter_client import OpenRouterClient
@@ -84,7 +85,7 @@ def _build_client(
 
 def main() -> int:
     """Run one wake cycle. Returns exit code 0 on clean completion, 1 on error."""
-    parser = argparse.ArgumentParser(prog="agent-001 wake")
+    parser = argparse.ArgumentParser(prog="agent wake")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -157,6 +158,34 @@ def main() -> int:
         total_confirmed = revenue.total_confirmed_usd()
         state.level.confirmed_revenue_usd = total_confirmed
         state.level.current_level = _level_for_revenue(total_confirmed)
+
+        # 9b. Daily email digest to the operator (the agent's first hand).
+        # Send at most once per Eastern day, and only on a day the agent
+        # actually published something. A failed or unconfigured send never
+        # fails the wake; we log it to the private log and continue.
+        today_eastern = today
+        public_summary = result.public_summary or ""
+        if public_summary.strip() and state.email.last_sent_date != today_eastern:
+            subject = f"Your agent posted today ({today_eastern})"
+            body_text = (
+                f"{public_summary}\n\n"
+                "Reply to your agent in the chat or on Telegram. "
+                "This is an automated daily note."
+            )
+            try:
+                outcome = send_operator_email(subject, body_text)
+                if outcome.get("sent"):
+                    state.email.last_sent_date = today_eastern
+                else:
+                    logger.write_private(
+                        today_eastern,
+                        f"email digest not sent: {outcome.get('reason', 'unknown')}",
+                    )
+            except Exception as exc:
+                logger.write_private(
+                    today_eastern,
+                    f"email digest raised unexpectedly: {type(exc).__name__}",
+                )
 
         memory.save_state(state)
 

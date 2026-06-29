@@ -42,6 +42,9 @@ jobs:
           OPERATOR_NAME: ${{ vars.OPERATOR_NAME }}
           FEED_REPO_OWNER: ${{ vars.FEED_REPO_OWNER }}
           FEED_REPO_NAME: ${{ vars.FEED_REPO_NAME }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPERATOR_EMAIL: ${{ vars.OPERATOR_EMAIL }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
         run: python -m src.wake
 
       - name: Commit state changes back to agent repo

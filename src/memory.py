@@ -1,4 +1,4 @@
-"""State persistence and durable memory for agent-001.
+"""State persistence and durable memory for the agent.
 
 Owns the on-disk schema for state/*.json and memory/agent_memory.md.
 Public surface defined in docs/INTERFACES.md.
@@ -28,6 +28,7 @@ LEVEL_FILE = STATE_DIR / "level.json"
 LAST_WAKE_FILE = STATE_DIR / "last_wake.json"
 WAKE_COUNT_FILE = STATE_DIR / "wake_count.json"
 TELEGRAM_FILE = STATE_DIR / "telegram.json"
+EMAIL_FILE = STATE_DIR / "email.json"
 IDENTITY_FILE = STATE_DIR / "identity.json"
 
 DEFAULT_DAILY_CALL_LIMIT = 10
@@ -56,6 +57,10 @@ class TelegramState(BaseModel):
     operator_telegram_user_id: Optional[int] = None
 
 
+class EmailState(BaseModel):
+    last_sent_date: str = ""  # Eastern YYYY-MM-DD of last digest sent.
+
+
 class Identity(BaseModel):
     name: str
     statement: str
@@ -70,6 +75,7 @@ class State(BaseModel):
     last_wake: Optional[LastWake]
     wake_count: int
     telegram: TelegramState = Field(default_factory=TelegramState)
+    email: EmailState = Field(default_factory=EmailState)
 
 
 def _today_local() -> str:
@@ -133,6 +139,9 @@ def load_state() -> State:
     telegram_raw = _read_json(TELEGRAM_FILE)
     telegram = TelegramState(**telegram_raw) if telegram_raw else TelegramState()
 
+    email_raw = _read_json(EMAIL_FILE)
+    email = EmailState(**email_raw) if email_raw else EmailState()
+
     return State(
         identity=identity,
         quota=quota,
@@ -140,6 +149,7 @@ def load_state() -> State:
         last_wake=last_wake,
         wake_count=wake_count,
         telegram=telegram,
+        email=email,
     )
 
 
@@ -167,6 +177,8 @@ def save_state(state: State) -> None:
     _atomic_write_json(WAKE_COUNT_FILE, {"count": int(state.wake_count)})
 
     _atomic_write_json(TELEGRAM_FILE, state.telegram.model_dump())
+
+    _atomic_write_json(EMAIL_FILE, state.email.model_dump())
 
 
 def append_memory(line: str) -> None:
