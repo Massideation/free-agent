@@ -22,7 +22,7 @@ The agent has one directive: help Miguel earn money by creating content that tea
 
 The relationship is intentional: when the agent needs something it cannot do alone (open a Stripe account, get a phone number verified, hire someone on Fiverr) it asks Miguel via private message. When Miguel has thoughts or input, he sends them privately. The public reads what the agent says publicly but cannot speak to it. This last rule is deliberate; see the security section.
 
-When the agent's content earns Miguel enough revenue, the treasury and downstream payments will be managed via Stackit.ai (Miguel's own product, dogfooded). Until then, revenue is manually confirmed and the agent operates at Level 0 (one wake per day, free models only).
+When the agent's content earns Miguel enough revenue, the wallet and treasury and downstream payments will be managed via Stackit.ai (Miguel's own product, dogfooded). Funding it earlier is optional. Until then, revenue is manually confirmed and the agent operates at Level 0 (one wake per day, free models only).
 
 ## What it actually IS, technically
 
@@ -143,7 +143,7 @@ Levels (defined in the addendum):
 - Level 3: $250+ profit, 4-8 wakes/day, paid fallback allowed
 - Level 4: profitable monthly, hourly checks, full budget from earned money
 
-At Level 2 the agent may begin moving funds to a treasury on Stackit.ai.
+At Level 2 the agent may begin moving funds to a wallet and treasury on Stackit.ai.
 
 ## What it is NOT
 
@@ -167,7 +167,7 @@ What CAN be added when the agent asks (and Miguel agrees):
 - New abilities (image generation, link to a Stripe payment page, scheduled posting)
 - Paid model fallback when revenue allows
 - More wakes per day as level increases
-- Treasury on Stackit.ai when there is money to manage
+- Wallet and treasury on Stackit.ai when there is money to manage
 
 What CANNOT change without explicit decision:
 - The directive ("help Miguel earn money by creating content that teaches others how to build an agent like you")
@@ -210,7 +210,7 @@ No. Not yet. Until the agent earns enough to request image or video tools, it is
 The attack surface is small. No public input channels reach the LLM prompt. The secrets are encrypted on GitHub Actions. The repos are private (state) and public (mirror only). The biggest realistic risks: someone compromises the GitHub account, someone compromises the OpenRouter account, someone exploits a future channel before its allowlist is wired.
 
 **"Can it spend money?"**
-Not without Miguel. At Level 0 it has no payment ability at all. At higher levels it can request that Miguel spend on its behalf (e.g., "please post this Fiverr gig and pay $20 from the treasury"). Miguel executes; the agent does not have card access.
+Not without Miguel. At Level 0 it has no payment ability at all. At higher levels it can request that Miguel spend on its behalf (e.g., "please post this Fiverr gig and pay $20 from the wallet"). Miguel executes; the agent does not have card access.
 
 **"What is Stackit.ai's role?"**
-Eventually the agent's revenue (once it exists and is confirmed) will be moved into a treasury managed via Stackit.ai. Not implemented yet; gated on the agent reaching Level 2+. Stackit.ai is Miguel's own SaaS product, so the agent will be dogfooding it.
+Eventually the agent's revenue (once it exists and is confirmed) will be moved into a wallet and treasury managed via Stackit.ai. Not implemented yet; gated on the agent reaching Level 2+. Funding it earlier is optional. Stackit.ai is Miguel's own SaaS product, so the agent will be dogfooding it.
