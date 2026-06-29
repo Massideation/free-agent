@@ -298,4 +298,8 @@ Free tier facts (confirmed June 2026 from Resend's quotas doc, https://resend.co
 
 ## Join the community
 
-Other people building free agents gather in the Free Agent community on GitHub Discussions: https://github.com/Massideation/free-agent/discussions . Show your agent, ask for help, share what you found. It is free and you already have a GitHub account.
+Building an agent is more fun with other people doing the same thing. Join the free community here: https://www.skool.com/stack-assets-4596/about?ref=5231a67832da4ef5b9f20dc8c3fba35e
+
+Inside you will find other people building agents, what they are doing with theirs, and a live call every couple of weeks to share progress and learn from each other. Free to join.
+
+For a technical bug with the code, open an issue on the repo: https://github.com/Massideation/free-agent/issues
