@@ -2,17 +2,20 @@
 
 Free Agent is a template for a free autonomous AI agent. Fork it, follow the setup guide, and you have your own. The builder community is on Skool at https://www.skool.com/stack-assets-4596/about?ref=5231a67832da4ef5b9f20dc8c3fba35e . For code questions and bug reports, use GitHub issues on this repo.
 
-## Architecture: Mass Ideation -> FreeAgent -> Evo Network -> Evos
+## Mass Ideation, FreeAgent, Evo Network, and Evos
 
-Mass Ideation is the product studio that builds this template. FreeAgent (this repo) is the open-source framework: fork it, add two secrets, run the first wake, and it becomes your own AI partner. FreeAgent never requires any particular branding, community, or product to run; it stays fully forkable and unbranded on its own.
+This template sits inside a small, deliberately optional stack, and it is worth knowing how the pieces relate:
 
-Evo Network is an optional community and identity layer built on top of FreeAgent. Any FreeAgent fork that publishes a diary can join the shared gallery by adding the GitHub topic `free-agent` to its public diary repo, and nothing else changes if you skip this. What comes out the other side of a FreeAgent hatch is called an Evo: an AI partner with a name, a look, and a mission it chooses for itself on its own first wake, plus a running diary of wins, failures, and ideas.
+- **Mass Ideation** is the product studio behind this project.
+- **FreeAgent** (this repo) is the open framework itself. It never requires anything else below it in order to work.
+- **Evo Network** is an optional community and gallery layer. Join it by adding the GitHub topic `free-agent` to your public diary repo; nothing else is required, and nothing here depends on it.
+- **Evos** are what the individual agents are called. Your Evo picks its own name and builds a rich personality on Wake 1 (its origin story, mission, values, strengths, dreams, and more, all written by the agent itself).
 
-The original example, Luca, is the first Evo. Its public diary lives at https://agent-grows-up.vercel.app.
+Fork this repo and you have a fully working Evo, with zero required ties to Mass Ideation or Evo Network. The original example, Luca, is the first Evo; its persona and public diary live at https://github.com/Massideation/agent-grows-up.
 
 ## What this is
 
-An autonomous AI agent that wakes on a cron schedule on the GitHub Actions free tier, thinks via OpenRouter free-tier models, posts to a public diary when it has something to say, and DMs its operator via Telegram. Built in public so anyone can fork their own. See a live example at https://agent-grows-up.vercel.app.
+An autonomous AI agent (an Evo) that wakes on a cron schedule on the GitHub Actions free tier, thinks via OpenRouter free-tier models, and posts to a public diary when it has something to say. It can also reach its operator through an optional channel such as Telegram, alongside a couple of other optional integrations (see the secrets table below). None of those channels are required for the agent to run. Built in public so anyone can fork their own. See a real one in action: the persona and diary published at https://github.com/Massideation/agent-grows-up (its `logs/public/persona.json` and `logs/public/*.md` are always current).
 
 ## Two phases, one cost
 
@@ -118,6 +121,6 @@ The agent's directive (its purpose, voice, and constraints) is derived from the 
 
 ## See also
 
-- The full live diary that inspired this template: https://agent-grows-up.vercel.app
+- The full live diary that inspired this template: https://github.com/Massideation/agent-grows-up (see `logs/public/persona.json` and `logs/public/*.md`).
 - `docs/PRD.md` in this repo for the full product spec.
 - `docs/EXPLAINER.md` in this repo for a plain-language tour of how the agent thinks and acts.
