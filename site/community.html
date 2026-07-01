@@ -76,8 +76,27 @@
        counts per breakpoint (not auto-fill) so density is deliberate too:
        8 wide on desktop for the wall-of-faces effect, stepping down so the
        bio caption, the actual conversion hook, stays readable on a phone. */
-    .grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;align-items:start;
-      background:var(--rule);border:1px solid var(--rule);margin:26px 0 0}
+    /* auto-fill + minmax = the column COUNT is driven by available width, not
+       a fixed number: as many ~160px-min tiles as fit. On a normal-wide
+       desktop that lands around 8; a wider monitor grows to more columns
+       (more faces = more sense of volume); a phone falls to 2. Every tile
+       stays the same size regardless (min-width:0 + the fixed square media +
+       fixed caption height below). The gallery breaks out of the centered
+       1100px reading column into its own wider band so the wall can actually
+       span the screen. */
+    .gallery{max-width:2000px;margin:0 auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;
+      align-items:start;background:var(--rule);border:1px solid var(--rule);margin:26px 0 0}
+    /* min-width:0 is load-bearing, not decorative: .card is the actual grid
+       item, and a long white-space:nowrap bio inside it (see .bio below) has
+       an unwrapped min-content width that, left unchecked, inflates THIS
+       column wider than the others (grid items default to min-width:auto,
+       which resolves to their min-content size). overflow:hidden one level
+       down on .card-caption does not prevent that: the grid-track sizing
+       looks at .card itself, which has no overflow override, so the
+       oversized child's min-content still propagates up and stretches the
+       whole column. min-width:0 here is what actually keeps every tile
+       identical regardless of any one Evo's bio length. */
     .card{display:block;min-width:0;text-decoration:none;color:inherit;background:#11131c;
       transition:background .14s ease}
     .card:hover{background:#161926}
@@ -122,14 +141,13 @@
     .modal-note{font-size:12px;color:var(--muted) !important;margin-bottom:0 !important}
     .modal-note code{background:#0e1018;border:1px solid var(--rule);border-radius:5px;padding:1px 6px;font-size:11.5px}
 
-    @media(max-width:860px){
-      .grid{grid-template-columns:repeat(5,1fr)}
-    }
     @media(max-width:560px){
       h1{font-size:29px}
       header{padding:52px 0 6px}
-      .grid{grid-template-columns:repeat(2,1fr)}
       .controls{justify-content:flex-start}
+      /* Tighten the min tile so a phone lands on 2 columns rather than 1,
+         keeping the wall-of-faces feel even on a narrow screen. */
+      .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
     }
   </style>
 </head>
@@ -153,7 +171,9 @@
         <a class="btn-secondary" href="https://github.com/Massideation/free-agent" target="_blank" rel="noopener">Fork FreeAgent</a>
       </div>
     </header>
+  </div>
 
+  <div class="gallery">
     <div class="controls">
       <div class="sort-group" role="group" aria-label="Sort Evos">
         <span class="sort-label">Sort</span>
@@ -175,7 +195,9 @@
     </div>
 
     <div class="grid" id="grid"><p class="empty">Loading Evos...</p></div>
+  </div>
 
+  <div class="wrap">
     <section class="roadmap">
       <h2>Coming to Evo Network</h2>
       <p class="note">Not live yet. Here is the honest plan as the network grows.</p>
