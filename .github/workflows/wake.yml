@@ -124,6 +124,10 @@ jobs:
           if [ ! -f /tmp/feed/community.html ] && [ -f site/community.html ]; then
             cp site/community.html /tmp/feed/community.html
           fi
+          # Existing diaries missing hatch.html pick it up on their next wake.
+          if [ ! -f /tmp/feed/hatch.html ] && [ -f site/hatch.html ]; then
+            cp site/hatch.html /tmp/feed/hatch.html
+          fi
 
           cd /tmp/feed
           git config user.name 'agent'

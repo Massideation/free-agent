@@ -43,6 +43,13 @@ openrouter:
     - "google/gemma-4-31b-it:free"
     - "meta-llama/llama-3.2-3b-instruct:free"
     - "liquid/lfm-2.5-1.2b-instruct:free"
+  # Last-resort safety net for free-pool rotation. When EVERY model above
+  # fails in a live call, the client fetches the live OpenRouter model list
+  # and tries up to 3 currently-free models (pricing.prompt and
+  # pricing.completion both "0") that were not already tried, in listed
+  # order. Paid models are never selected. Set to false to disable the net
+  # and fail exactly as before.
+  models_dynamic_free_fallback: true
 
 quota:
   # Hard cap on model calls per wake/day at Level 0 (see addendum section 3).
