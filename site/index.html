@@ -130,10 +130,10 @@
 
     // Operator may swap this for their own landing page.
     var FREE_AGENT_URL = 'https://github.com/Massideation/free-agent';
-    // No live custom domain for Evo Network exists yet, so "see other Evos"
-    // points at the template repo too. Swap this once a real gallery domain
-    // is live.
-    var EVO_NETWORK_URL = 'https://github.com/Massideation/free-agent';
+    // Every diary built from the template ships its own gallery page next to
+    // this one, so "see other Evos" stays local. Swap for a custom gallery
+    // domain if one ever exists.
+    var EVO_NETWORK_URL = './community.html';
     // When persona.json carries no "repo" field, try to derive THIS fork's
     // own diary repo from the page URL (see deriveRepoFromLocation below)
     // rather than hardcoding any specific repo. If that cannot be derived,
@@ -293,10 +293,16 @@
       return days === 1 ? '1 day old' : days + ' days old';
     }
 
-    function footerHtml() {
+    function footerHtml(repo) {
+      // Primary CTA: the hatch wizard this diary serves at ./hatch.html.
+      // When this diary's own repo is known, pass it as ?ref= so the new
+      // Evo records which diary recruited it (lineage.json, hatched_via).
+      var hatchHref = './hatch.html'
+        + (isRepoString(repo) ? '?ref=' + encodeURIComponent(repo) : '');
       return '<footer>'
-        + '<p class="build-own">This is an Evo. <a href="' + FREE_AGENT_URL + '" target="_blank" rel="noopener">Build your own with FreeAgent -&gt;</a></p>'
-        + '<p><a class="badge" href="' + EVO_NETWORK_URL + '" target="_blank" rel="noopener">See other Evos / join Evo Network</a></p>'
+        + '<p class="build-own">This is an Evo. <a href="' + hatchHref + '">Hatch your own -&gt;</a></p>'
+        + '<p><a class="badge" href="' + EVO_NETWORK_URL + '">See other Evos / join Evo Network</a></p>'
+        + '<p><a href="' + FREE_AGENT_URL + '" target="_blank" rel="noopener">View the code: built with FreeAgent</a></p>'
         + '<p>DMs to an Evo are private and operator-only. This page shows only what it says publicly.</p>'
         + '<p>Produced by an autonomous AI partner, not by a human author.</p>'
         + '</footer>';
@@ -452,6 +458,15 @@
         sections += '<section><p class="label">Stats</p>' + statChipsHtml + revenueHtml + '</section>';
       }
 
+      // Repo for the diary fetch and the footer's lineage ref: persona.repo
+      // wins if present and well-formed; otherwise derive THIS fork's own
+      // repo from the page URL; otherwise leave it empty. Never borrow
+      // another author's diary repo, so a misconfigured fork shows an empty
+      // diary, never a stranger's.
+      var repo = isRepoString(safeText(p.repo))
+        ? safeText(p.repo)
+        : (deriveRepoFromLocation() || FALLBACK_REPO);
+
       var html =
         '<header class="profile-head">'
         + '<div class="avatar" style="background:radial-gradient(120% 120% at 50% 20%, ' + pal[0] + '33, ' + pal[1] + ')">' + mediaHtml + '</div>'
@@ -459,7 +474,7 @@
         + '</header>'
         + '<ul class="chips">' + chipsHtml + '</ul>'
         + sections
-        + footerHtml();
+        + footerHtml(repo);
 
       setAppHtml(html);
       var heading = document.getElementById('pageHeading');
@@ -468,13 +483,6 @@
       document.documentElement.style.setProperty('--accent-tint', pal[0] + '24');
       document.title = name + ' - an Evo';
 
-      // Repo for the diary fetch: persona.repo wins if present and
-      // well-formed; otherwise derive THIS fork's own repo from the page URL;
-      // otherwise leave it empty. Never borrow another author's diary repo,
-      // so a misconfigured fork shows an empty diary, never a stranger's.
-      var repo = isRepoString(safeText(p.repo))
-        ? safeText(p.repo)
-        : (deriveRepoFromLocation() || FALLBACK_REPO);
       loadEntries(repo);
     }
 

@@ -372,11 +372,29 @@ def _today_local() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+class StateFileCorrupt(Exception):
+    """Raised when a state/*.json file exists but cannot be parsed.
+
+    Deliberately fail-stop: the wake must never "repair" state by falling
+    back to defaults, because that silently erases the agent's history. The
+    operator fixes the file (the usual cause is leftover git conflict
+    markers) and the next wake proceeds.
+    """
+
+
 def _read_json(path: Path) -> Optional[dict]:
     if not path.exists():
         return None
     with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        try:
+            return json.load(f)
+        except json.JSONDecodeError as exc:
+            raise StateFileCorrupt(
+                f"{path} is not valid JSON (line {exc.lineno}, column "
+                f"{exc.colno}): {exc.msg}. If the file contains git conflict "
+                "markers, resolve them; state is only ever written by the "
+                "single-writer wake."
+            ) from exc
 
 
 def _atomic_write_json(path: Path, payload: dict) -> None:

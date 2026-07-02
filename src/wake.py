@@ -138,13 +138,19 @@ def _build_client(
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         return None
-    models = (settings.get("openrouter") or {}).get("models") or []
+    openrouter_cfg = settings.get("openrouter") or {}
+    models = openrouter_cfg.get("models") or []
     if not models:
         return None
+    # Dynamic free-model fallback flag; absent means on (the settings.yaml
+    # default). Only an explicit false in settings.yaml turns it off.
+    dynamic_raw = openrouter_cfg.get("models_dynamic_free_fallback")
+    dynamic_free_fallback = True if dynamic_raw is None else bool(dynamic_raw)
     return OpenRouterClient(
         api_key=api_key,
         models=list(models),
         quota_state=state.quota,
+        dynamic_free_fallback=dynamic_free_fallback,
     )
 
 
@@ -657,6 +663,23 @@ def main() -> int:
             today,
             f"task={task_name}\noutcome={result.summary}",
         )
+
+        # 7a. Quiet-Evo guard: record whether this live wake produced any
+        # model output, and nudge the operator after repeated all-failed
+        # wakes. Runs only here, after the task (model calls are finished),
+        # and never on --dry-run, which returned earlier. Imported lazily
+        # and guarded, same reasoning as 5b above: a failure in the guard
+        # must never fail the wake.
+        try:
+            from src import health  # type: ignore
+
+            health.observe_wake(state, client, today)
+        except Exception as exc:
+            logger.write_private(
+                today,
+                f"health.observe_wake unavailable or raised: "
+                f"{type(exc).__name__}",
+            )
         if result.public_summary and result.public_summary.strip():
             try:
                 logger.write_public(today, result.public_summary)
